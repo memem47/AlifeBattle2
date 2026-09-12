@@ -60,14 +60,54 @@ class Agent:
 
         self.position = position + direction.normalize() * movement_distance
 
+    def calculate_separation(
+        self,
+        agents: list[Agent],
+        positions: dict[int, pygame.Vector2] | None = None,
+    ) -> pygame.Vector2:
+        position = self.position if positions is None else positions[self.id]
+        separation = pygame.Vector2()
+
+        for other in agents:
+            if other is self or not other.is_alive():
+                continue
+
+            other_position = (
+                other.position if positions is None else positions[other.id]
+            )
+            offset = position - other_position
+            distance = offset.length()
+            if distance >= config.SEPARATION_DISTANCE:
+                continue
+
+            if distance <= config.DISTANCE_EPSILON:
+                direction = pygame.Vector2(
+                    1 if self.id < other.id else -1,
+                    0,
+                )
+            else:
+                direction = offset.normalize()
+
+            separation += direction * (
+                config.SEPARATION_DISTANCE - distance
+            )
+
+        if separation.length_squared() == 0:
+            return separation
+
+        return separation.normalize() * config.SEPARATION_STRENGTH
+
     def is_in_attack_range(self, target: Agent) -> bool:
-        return self.position.distance_to(target.position) <= config.ATTACK_RANGE
+        return (
+            self.position.distance_to(target.position)
+            <= config.ATTACK_RANGE + config.DISTANCE_EPSILON
+        )
 
     def can_attack(self, target: Agent) -> bool:
         return (
             self.is_alive()
             and target.is_alive()
-            and self.attack_cooldown == 0
+            and self.attack_cooldown <= 0.0
             and self.is_in_attack_range(target)
         )
 

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import random
+
 import pygame
 
 import config
@@ -17,19 +19,50 @@ class Game:
         self.agents = []
         self.winner = None
         self.battle_finished = False
+        random_generator = random.Random(config.RANDOM_SEED)
 
         for team, start_x, column_direction in (
             (config.RED, config.RED_START_X, 1),
             (config.BLUE, config.BLUE_START_X, -1),
         ):
-            for index in range(config.TEAM_SIZE):
-                row = index // 2
-                column = index % 2
-                position = pygame.Vector2(
-                    start_x + column_direction * column * config.COLUMN_SPACING,
-                    config.START_Y + row * config.ROW_SPACING,
+            team_positions: list[pygame.Vector2] = []
+            for _ in range(config.TEAM_SIZE):
+                position = self._random_start_position(
+                    random_generator,
+                    start_x,
+                    column_direction,
+                    team_positions,
                 )
-                self.agents.append(Agent(len(self.agents), team, position))
+                team_positions.append(position)
+                agent = Agent(len(self.agents), team, position)
+                agent.attack_cooldown = random_generator.uniform(
+                    0.0, config.ATTACK_INTERVAL
+                )
+                self.agents.append(agent)
+
+    def _random_start_position(
+        self,
+        random_generator: random.Random,
+        start_x: float,
+        column_direction: int,
+        existing_positions: list[pygame.Vector2],
+    ) -> pygame.Vector2:
+        for _ in range(100):
+            position = pygame.Vector2(
+                start_x
+                + column_direction
+                * random_generator.uniform(
+                    -config.START_X_VARIATION, config.START_X_VARIATION
+                ),
+                random_generator.uniform(config.START_Y_MIN, config.START_Y_MAX),
+            )
+            if all(
+                position.distance_to(existing) >= config.INITIAL_MIN_DISTANCE
+                for existing in existing_positions
+            ):
+                return position
+
+        return position
 
     def update(self, dt: float) -> None:
         if self.battle_finished:
@@ -59,7 +92,31 @@ class Game:
                     dt,
                     start_position=positions[agent.id],
                 )
-            planned_positions[agent.id] = agent.position.copy()
+            separation = agent.calculate_separation(living_agents, positions)
+            planned_position = agent.position + separation * dt
+            if agent.id in target_positions:
+                target_position = target_positions[agent.id]
+                base_target_distance = agent.position.distance_to(target_position)
+                target_distance = planned_position.distance_to(target_position)
+                if (
+                    base_target_distance > config.ATTACK_RANGE
+                    and target_distance > base_target_distance
+                ):
+                    away_direction = (agent.position - target_position).normalize()
+                    outward_speed = separation.dot(away_direction)
+                    if outward_speed > 0:
+                        separation -= away_direction * outward_speed
+                        planned_position = agent.position + separation * dt
+                        target_distance = planned_position.distance_to(target_position)
+                if (
+                    base_target_distance <= config.ATTACK_RANGE
+                    and target_distance > config.ATTACK_RANGE
+                ):
+                    direction = planned_position - target_position
+                    planned_position = target_position + direction.normalize() * (
+                        config.ATTACK_RANGE - config.DISTANCE_EPSILON
+                    )
+            planned_positions[agent.id] = planned_position
 
         for agent in living_agents:
             agent.position = planned_positions[agent.id]

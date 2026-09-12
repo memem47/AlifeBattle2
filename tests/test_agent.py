@@ -24,9 +24,9 @@ def test_move_toward_uses_elapsed_time_and_stops_at_attack_range() -> None:
     agent = make_agent(1, config.RED, 0)
 
     agent.move_toward(pygame.Vector2(100, 0), 0.5)
-    assert agent.position.x == 30
+    assert agent.position.x == config.AGENT_SPEED * 0.5
 
-    agent.move_toward(pygame.Vector2(100, 0), 1.0)
+    agent.move_toward(pygame.Vector2(100, 0), 3.0)
     assert agent.position.x == 88
 
 
@@ -43,6 +43,17 @@ def test_attack_range_and_cooldown() -> None:
     assert attacker.can_attack(target)
 
 
+def test_attack_range_allows_small_floating_point_error() -> None:
+    attacker = make_agent(1, config.RED, 0)
+    target = make_agent(
+        2,
+        config.BLUE,
+        config.ATTACK_RANGE + config.DISTANCE_EPSILON / 2,
+    )
+
+    assert attacker.is_in_attack_range(target)
+
+
 def test_find_nearest_living_enemy() -> None:
     agent = make_agent(1, config.RED, 0)
     nearest = make_agent(2, config.BLUE, 10)
@@ -51,3 +62,13 @@ def test_find_nearest_living_enemy() -> None:
     dead.take_damage(config.AGENT_HP)
 
     assert agent.find_nearest_enemy([agent, farther, dead, nearest]) is nearest
+
+
+def test_calculate_separation_pushes_agent_away_from_neighbor() -> None:
+    agent = make_agent(1, config.RED, 0)
+    neighbor = make_agent(2, config.RED, config.AGENT_RADIUS)
+
+    separation = agent.calculate_separation([agent, neighbor])
+
+    assert separation.x < 0
+    assert separation.y == 0

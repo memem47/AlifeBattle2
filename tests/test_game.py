@@ -11,13 +11,72 @@ def make_agent(agent_id: int, team: str, x: float, hp: float = config.AGENT_HP) 
     return agent
 
 
-def test_reset_creates_two_deterministic_teams() -> None:
+def test_reset_creates_two_teams_with_reproducible_random_positions(monkeypatch) -> None:
+    monkeypatch.setattr(config, "RANDOM_SEED", 0)
     game = Game()
+    first_positions = [agent.position.copy() for agent in game.agents]
+    first_cooldowns = [agent.attack_cooldown for agent in game.agents]
+    game.reset()
+    second_positions = [agent.position.copy() for agent in game.agents]
+    second_cooldowns = [agent.attack_cooldown for agent in game.agents]
 
     assert len(game.agents) == 20
     assert len(game.get_living_agents(config.RED)) == config.TEAM_SIZE
     assert len(game.get_living_agents(config.BLUE)) == config.TEAM_SIZE
-    assert game.agents[0].position == pygame.Vector2(config.RED_START_X, config.START_Y)
+    assert first_positions == second_positions
+    assert first_cooldowns == second_cooldowns
+    assert any(
+        position != pygame.Vector2(config.RED_START_X, config.START_Y)
+        for position in first_positions
+    )
+    assert all(
+        config.RED_START_X - config.START_X_VARIATION <= agent.position.x
+        <= config.RED_START_X + config.START_X_VARIATION
+        for agent in game.get_living_agents(config.RED)
+    )
+    assert all(
+        config.BLUE_START_X - config.START_X_VARIATION <= agent.position.x
+        <= config.BLUE_START_X + config.START_X_VARIATION
+        for agent in game.get_living_agents(config.BLUE)
+    )
+    for team in (config.RED, config.BLUE):
+        team_agents = game.get_living_agents(team)
+        for index, agent in enumerate(team_agents):
+            assert all(
+                agent.position.distance_to(other.position)
+                >= config.INITIAL_MIN_DISTANCE
+                for other in team_agents[index + 1 :]
+            )
+
+    red_positions = [agent.position for agent in game.get_living_agents(config.RED)]
+    blue_positions = [agent.position for agent in game.get_living_agents(config.BLUE)]
+    assert max(position.x for position in red_positions) < min(
+        position.x for position in blue_positions
+    )
+
+
+def test_default_battle_completes_after_agents_reach_attack_range() -> None:
+    game = Game()
+
+    for _ in range(1800):
+        game.update(1 / 60)
+        if game.battle_finished:
+            break
+
+    assert game.battle_finished
+    assert game.winner in (config.RED, config.BLUE, config.DRAW)
+
+
+def test_default_seed_does_not_stall_at_attack_range(monkeypatch) -> None:
+    monkeypatch.setattr(config, "RANDOM_SEED", 1)
+    game = Game()
+
+    for _ in range(6000):
+        game.update(1 / 60)
+        if game.battle_finished:
+            break
+
+    assert game.battle_finished
 
 
 def test_nearest_target_and_dead_target_exclusion() -> None:
