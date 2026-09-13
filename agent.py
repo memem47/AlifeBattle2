@@ -17,6 +17,7 @@ class Agent:
         self.id = agent_id
         self.team = team
         self.position = pygame.Vector2(position)
+        self.facing_direction = pygame.Vector2(1, 0)
         self.hp = config.AGENT_HP
         self.attack_cooldown = 0.0
         self.target: Agent | None = None
@@ -26,6 +27,10 @@ class Agent:
 
     def update_cooldown(self, dt: float) -> None:
         self.attack_cooldown = max(0.0, self.attack_cooldown - dt)
+
+    def update_facing_direction(self, movement: pygame.Vector2) -> None:
+        if movement.length_squared() > config.DISTANCE_EPSILON**2:
+            self.facing_direction = movement.normalize()
 
     def find_nearest_enemy(self, agents: list[Agent]) -> Agent | None:
         nearest_enemy = None

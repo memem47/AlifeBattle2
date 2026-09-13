@@ -75,7 +75,8 @@ class Game:
             agent.update_cooldown(dt)
 
         for agent in living_agents:
-            agent.target = agent.find_nearest_enemy(living_agents)
+            if agent.target is None or not agent.target.is_alive():
+                agent.target = agent.find_nearest_enemy(living_agents)
 
         positions = {agent.id: agent.position.copy() for agent in living_agents}
         target_positions = {
@@ -119,6 +120,8 @@ class Game:
             planned_positions[agent.id] = planned_position
 
         for agent in living_agents:
+            movement = planned_positions[agent.id] - positions[agent.id]
+            agent.update_facing_direction(movement)
             agent.position = planned_positions[agent.id]
 
         attacks = []

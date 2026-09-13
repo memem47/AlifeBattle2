@@ -72,3 +72,13 @@ def test_calculate_separation_pushes_agent_away_from_neighbor() -> None:
 
     assert separation.x < 0
     assert separation.y == 0
+
+
+def test_facing_direction_updates_only_for_non_zero_movement() -> None:
+    agent = make_agent(1, config.RED, 0)
+
+    agent.update_facing_direction(pygame.Vector2(0, 4))
+    assert agent.facing_direction == pygame.Vector2(0, 1)
+
+    agent.update_facing_direction(pygame.Vector2())
+    assert agent.facing_direction == pygame.Vector2(0, 1)

@@ -92,6 +92,70 @@ def test_nearest_target_and_dead_target_exclusion() -> None:
     assert red.target is nearest
 
 
+def test_living_target_is_kept_until_it_dies() -> None:
+    game = Game()
+    red = make_agent(1, config.RED, 0)
+    current_target = make_agent(2, config.BLUE, 30)
+    closer_target = make_agent(3, config.BLUE, 10)
+    red.target = current_target
+    game.agents = [red, current_target, closer_target]
+
+    game.update(0)
+
+    assert red.target is current_target
+
+
+def test_update_stores_final_movement_direction() -> None:
+    game = Game()
+    red = make_agent(1, config.RED, 0)
+    blue = make_agent(2, config.BLUE, 100)
+    game.agents = [red, blue]
+
+    game.update(0.5)
+
+    assert red.facing_direction == pygame.Vector2(1, 0)
+    assert blue.facing_direction == pygame.Vector2(-1, 0)
+
+
+def test_dead_agent_keeps_position_and_is_excluded_from_update() -> None:
+    game = Game()
+    red = make_agent(1, config.RED, 0)
+    dead_blue = make_agent(2, config.BLUE, 10, hp=0)
+    dead_position = dead_blue.position.copy()
+    game.agents = [red, dead_blue]
+
+    game.update(0.5)
+
+    assert dead_blue.position == dead_position
+    assert red.target is None
+
+
+def test_agents_keep_separation_inside_attack_range_without_oscillation() -> None:
+    game = Game()
+    red = make_agent(1, config.RED, 0)
+    blue = make_agent(2, config.BLUE, config.ATTACK_RANGE)
+    game.agents = [red, blue]
+
+    game.update(1 / 60)
+    first_positions = [agent.position.copy() for agent in game.agents]
+    game.update(1 / 60)
+
+    assert [agent.position for agent in game.agents] == first_positions
+    assert red.position.distance_to(blue.position) >= config.ATTACK_RANGE
+
+
+def test_separation_does_not_change_direction_at_long_range() -> None:
+    game = Game()
+    red = make_agent(1, config.RED, 0)
+    blue = make_agent(2, config.BLUE, 100)
+    nearby_ally = make_agent(3, config.RED, 30)
+    game.agents = [red, blue, nearby_ally]
+
+    game.update(1 / 60)
+
+    assert red.facing_direction == pygame.Vector2(1, 0)
+
+
 def test_red_wins_when_blue_is_dead() -> None:
     game = Game()
     red = make_agent(1, config.RED, 0)
