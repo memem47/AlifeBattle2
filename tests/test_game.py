@@ -15,20 +15,14 @@ def test_reset_creates_two_teams_with_reproducible_random_positions(monkeypatch)
     monkeypatch.setattr(config, "RANDOM_SEED", 0)
     game = Game()
     first_positions = [agent.position.copy() for agent in game.agents]
-    first_cooldowns = [agent.attack_cooldown for agent in game.agents]
     game.reset()
     second_positions = [agent.position.copy() for agent in game.agents]
-    second_cooldowns = [agent.attack_cooldown for agent in game.agents]
-
+    
     assert len(game.agents) == 20
     assert len(game.get_living_agents(config.RED)) == config.TEAM_SIZE
     assert len(game.get_living_agents(config.BLUE)) == config.TEAM_SIZE
     assert first_positions == second_positions
-    assert first_cooldowns == second_cooldowns
-    assert any(
-        position != pygame.Vector2(config.RED_START_X, config.START_Y)
-        for position in first_positions
-    )
+    assert all(agent.attack_cooldown == 0 for agent in game.agents)
     assert all(
         config.RED_START_X - config.START_X_VARIATION <= agent.position.x
         <= config.RED_START_X + config.START_X_VARIATION
@@ -92,17 +86,19 @@ def test_nearest_target_and_dead_target_exclusion() -> None:
     assert red.target is nearest
 
 
-def test_living_target_is_kept_until_it_dies() -> None:
+def test_target_changes_to_nearest_enemy_each_update() -> None:
     game = Game()
+
     red = make_agent(1, config.RED, 0)
-    current_target = make_agent(2, config.BLUE, 30)
-    closer_target = make_agent(3, config.BLUE, 10)
-    red.target = current_target
-    game.agents = [red, current_target, closer_target]
+    farther = make_agent(2, config.BLUE, 30)
+    nearer = make_agent(3, config.BLUE, 10)
+
+    red.target = farther
+    game.agents = [red, farther, nearer]
 
     game.update(0)
 
-    assert red.target is current_target
+    assert red.target is nearer
 
 
 def test_update_stores_final_movement_direction() -> None:

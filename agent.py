@@ -82,6 +82,7 @@ class Agent:
             )
             offset = position - other_position
             distance = offset.length()
+
             if distance >= config.SEPARATION_DISTANCE:
                 continue
 
@@ -93,14 +94,16 @@ class Agent:
             else:
                 direction = offset.normalize()
 
-            separation += direction * (
+            overlap_ratio = (
                 config.SEPARATION_DISTANCE - distance
-            )
+            ) / config.SEPARATION_DISTANCE
 
-        if separation.length_squared() == 0:
-            return separation
+            separation += direction * overlap_ratio
 
-        return separation.normalize() * config.SEPARATION_STRENGTH
+        if separation.length_squared() > 1.0:
+            return separation.normalize()
+
+        return separation * config.MAX_SEPARATION_SPEED
 
     def is_in_attack_range(self, target: Agent) -> bool:
         return (
