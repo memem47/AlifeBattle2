@@ -122,16 +122,10 @@ class Game:
 
             if agent.id in target_positions:
                 target_position = target_positions[agent.id]
-                target_direction = target_position - start_position
-                target_distance = target_direction.length()
-                if target_distance > 0:
-                    max_advance = max(0.0, target_distance - config.ATTACK_RANGE)
-                    move_distance = min(config.AGENT_SPEED * dt, max_advance)
-                    reaches_attack_range = move_distance >= max_advance
-                    if move_distance > 0:
-                        planned_position = start_position + (
-                            target_direction.normalize() * move_distance
-                        )
+                target_movement = agent.calculate_target_movement(
+                    target_position, dt, start_position
+                )
+                planned_position += target_movement
 
             separation = agent.calculate_separation(living_agents, positions)
             planned_position += separation * dt

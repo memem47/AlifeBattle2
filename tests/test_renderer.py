@@ -6,16 +6,19 @@ from game import Game
 from renderer import draw_agent, draw_game, get_agent_color, get_triangle_points
 
 
-def make_agent(hp: float) -> Agent:
-    agent = Agent(1, config.RED, pygame.Vector2(50, 50))
+def make_agent(hp: float, team: int = config.RED) -> Agent:
+    agent = Agent(1, team, pygame.Vector2(50, 50))
     agent.hp = hp
     return agent
 
 
 def test_health_colors_have_three_levels_per_team() -> None:
-    assert get_agent_color(make_agent(100)) == config.RED_HEALTHY_COLOR
-    assert get_agent_color(make_agent(60)) == config.RED_DAMAGED_COLOR
-    assert get_agent_color(make_agent(30)) == config.RED_CRITICAL_COLOR
+    assert get_agent_color(make_agent(100, config.RED)) == config.RED_HEALTHY_COLOR
+    assert get_agent_color(make_agent(60, config.RED)) == config.RED_DAMAGED_COLOR
+    assert get_agent_color(make_agent(30, config.RED)) == config.RED_CRITICAL_COLOR
+    assert get_agent_color(make_agent(100, config.BLUE)) == config.BLUE_HEALTHY_COLOR
+    assert get_agent_color(make_agent(60, config.BLUE)) == config.BLUE_DAMAGED_COLOR
+    assert get_agent_color(make_agent(30, config.BLUE)) == config.BLUE_CRITICAL_COLOR
 
 
 def test_triangle_points_follow_facing_direction() -> None:

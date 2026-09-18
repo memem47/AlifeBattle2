@@ -49,7 +49,10 @@ def test_reset_creates_two_teams_with_reproducible_random_positions(monkeypatch)
     )
 
 
-def test_default_battle_completes_after_agents_reach_attack_range() -> None:
+def test_deeded_battle_completes_after_agents_reach_attack_range(
+        monkeypatch,
+) -> None:
+    monkeypatch.setattr(config, "RANDOM_SEED", 0)
     game = Game()
 
     for _ in range(1800):

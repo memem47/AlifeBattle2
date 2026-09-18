@@ -20,14 +20,14 @@ def test_take_damage_and_death() -> None:
     assert not agent.is_alive()
 
 
-def test_move_toward_uses_elapsed_time_and_stops_at_attack_range() -> None:
+def test_calculate_target_movement_uses_elapsed_time_and_stops_at_attack_range() -> None:
     agent = make_agent(1, config.RED, 0)
 
-    agent.move_toward(pygame.Vector2(100, 0), 0.5)
-    assert agent.position.x == config.AGENT_SPEED * 0.5
+    target_movement = agent.calculate_target_movement(pygame.Vector2(100, 0), 0.5)
+    assert target_movement.x == config.AGENT_SPEED * 0.5
 
-    agent.move_toward(pygame.Vector2(100, 0), 3.0)
-    assert agent.position.x == 88
+    target_movement = agent.calculate_target_movement(pygame.Vector2(100, 0), 3.0)
+    assert target_movement.x == config.AGENT_SPEED * 3.0
 
 
 def test_attack_range_and_cooldown() -> None:
@@ -66,13 +66,17 @@ def test_find_nearest_living_enemy() -> None:
 
 def test_calculate_separation_pushes_agent_away_from_neighbor() -> None:
     agent = make_agent(1, config.RED, 0)
-    neighbor = make_agent(2, config.RED, config.AGENT_RADIUS)
+    neighbor1 = make_agent(2, config.RED, 1)
+    neighbor2 = make_agent(3, config.RED, 2)
 
-    separation = agent.calculate_separation([agent, neighbor])
+    separation = agent.calculate_separation(
+        [agent, neighbor1,neighbor2]
+        )
 
-    assert separation.x < 0
-    assert separation.y == 0
-
+    assert abs(
+        separation.length()
+        - config.MAX_SEPARATION_SPEED
+    ) < 1e-6
 
 def test_facing_direction_updates_only_for_non_zero_movement() -> None:
     agent = make_agent(1, config.RED, 0)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from math import inf
+from turtle import distance
 
 import pygame
 
@@ -47,23 +48,33 @@ class Agent:
 
         return nearest_enemy
 
-    def move_toward(
+    def calculate_target_movement(
         self,
         target_position: pygame.Vector2,
         dt: float,
         start_position: pygame.Vector2 | None = None,
-    ) -> None:
-        position = self.position if start_position is None else pygame.Vector2(start_position)
+    ) -> pygame.Vector2:
+        position = (
+            self.position 
+            if start_position is None 
+            else pygame.Vector2(start_position)
+        )
+
         direction = pygame.Vector2(target_position) - position
         distance = direction.length()
-        maximum_distance = max(0.0, distance - config.ATTACK_RANGE)
-        movement_distance = min(config.AGENT_SPEED * dt, maximum_distance)
 
-        if distance == 0 or movement_distance == 0:
-            self.position = position
-            return
+        if distance <= config.ATTACK_RANGE:
+            return pygame.Vector2()
+        
+        movement_distance = min(
+            config.AGENT_SPEED * dt, 
+            distance - config.ATTACK_RANGE,
+        )
 
-        self.position = position + direction.normalize() * movement_distance
+        if movement_distance <= 0:
+            return pygame.Vector2()
+        
+        return direction.normalize() * movement_distance
 
     def calculate_separation(
         self,
@@ -101,7 +112,7 @@ class Agent:
             separation += direction * overlap_ratio
 
         if separation.length_squared() > 1.0:
-            return separation.normalize()
+            separation = separation.normalize()
 
         return separation * config.MAX_SEPARATION_SPEED
 

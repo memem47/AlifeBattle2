@@ -24,6 +24,6 @@ python -m pytest
 
 Project goals and design decisions are documented separately:
 
-- Vision
-- v0.1 Specification
-- v0.1 Design
+- [Vision](docs/VISION.md)
+- [v0.1 Specification](docs/specs/v0.1.md)
+- [v0.1 Design](docs/designs/v0.1_DESIGN.md)
