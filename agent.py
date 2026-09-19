@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from math import inf
-from turtle import distance
 
 import pygame
 
@@ -41,10 +40,11 @@ class Agent:
             if not enemy.is_alive() or enemy.team == self.team:
                 continue
 
-            distance = self.position.distance_to(enemy.position)
-            if distance < nearest_distance:
+            offset = self.position - enemy.position
+            distance_squared = offset.length_squared()
+            if distance_squared < nearest_distance:
                 nearest_enemy = enemy
-                nearest_distance = distance
+                nearest_distance = distance_squared
 
         return nearest_enemy
 

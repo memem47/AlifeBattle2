@@ -25,7 +25,7 @@ def main() -> None:
 
         dt = min(clock.tick(config.TARGET_FPS) / 1000.0, config.MAX_DT)
         game.update(dt)
-        draw_game(screen, game)
+        draw_game(screen, game, clock.get_fps())
         pygame.display.flip()
 
     pygame.quit()

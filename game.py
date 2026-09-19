@@ -67,7 +67,9 @@ class Game:
         living_agents = self.get_living_agents()
 
         self._update_cooldowns(living_agents, dt)
-        self._select_targets(living_agents)
+        red_agents = self.get_living_agents(config.RED)
+        blue_agents = self.get_living_agents(config.BLUE)
+        self._select_targets(red_agents, blue_agents)
 
         positions = self._snapshot_positions(living_agents)
         target_positions = {
@@ -99,9 +101,11 @@ class Game:
         for agent in living_agents:
             agent.update_cooldown(dt)
 
-    def _select_targets(self, living_agents: list[Agent]) -> None:
-        for agent in living_agents:
-            agent.target = agent.find_nearest_enemy(living_agents)
+    def _select_targets(self, red_agents: list[Agent], blue_agents: list[Agent]) -> None:
+        for agent in red_agents:
+            agent.target = agent.find_nearest_enemy(blue_agents)
+        for agent in blue_agents:
+            agent.target = agent.find_nearest_enemy(red_agents)
 
     def _snapshot_positions(self, living_agents: list[Agent]) -> dict[int, pygame.Vector2]:
         positions = {agent.id: agent.position.copy() for agent in living_agents}
