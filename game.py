@@ -121,11 +121,15 @@ class Game:
             reaches_attack_range = False
 
             if agent.id in target_positions:
-                target_position = target_positions[agent.id]
+                target_position = target_positions[agent.id]                
                 target_movement = agent.calculate_target_movement(
                     target_position, dt, start_position
                 )
                 planned_position += target_movement
+                reaches_attack_range = (
+                    planned_position.distance_to(target_position)
+                    <= config.ATTACK_RANGE + config.DISTANCE_EPSILON
+                )
 
             separation = agent.calculate_separation(living_agents, positions)
             planned_position += separation * dt
