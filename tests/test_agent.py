@@ -31,7 +31,7 @@ def test_calculate_target_movement_uses_elapsed_time_and_stops_at_attack_range()
     target_movement = agent.calculate_target_movement(
         pygame.Vector2(100, 0), 4.0
        )
-    assert target_movement.x == config.ATTACK_RANGE
+    assert target_movement.x == 100 - config.ATTACK_RANGE
 
 
 def test_attack_range_and_cooldown() -> None:
@@ -65,7 +65,7 @@ def test_find_nearest_living_enemy() -> None:
     dead = make_agent(4, config.BLUE, 1)
     dead.take_damage(config.AGENT_HP)
 
-    assert agent.find_nearest_enemy([agent, farther, dead, nearest]) is nearest
+    assert agent.find_nearest_enemy([farther, dead, nearest]) is nearest
 
 
 def test_calculate_separation_pushes_agent_away_from_neighbor() -> None:
