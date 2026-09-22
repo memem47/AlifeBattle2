@@ -19,7 +19,7 @@ def test_reset_creates_two_teams_with_reproducible_random_positions(monkeypatch)
     second_positions = [agent.position.copy() for agent in game.agents]
     
     assert len(game.agents) == config.TEAM_SIZE * 2
-    assert len(game.get_living_agents(config.RED)) == 
+    assert len(game.get_living_agents(config.RED)) == config.TEAM_SIZE
     assert len(game.get_living_agents(config.BLUE)) == config.TEAM_SIZE
     assert first_positions == second_positions
     assert all(agent.attack_cooldown == 0 for agent in game.agents)

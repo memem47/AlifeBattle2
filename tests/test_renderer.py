@@ -50,7 +50,7 @@ def test_living_agent_is_drawn_over_dead_agent_at_same_position() -> None:
     game = Game()
     game.agents = [living_agent, dead_agent]
 
-    draw_game(screen, game)
+    draw_game(screen, game, fps=60)
 
     assert screen.get_at((50, 50))[:3] == config.BLUE_HEALTHY_COLOR
     pygame.quit()

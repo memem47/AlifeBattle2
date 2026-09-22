@@ -67,8 +67,30 @@ def draw_hud(screen: pygame.Surface, game: Game, fps: float) -> None:
     screen.blit(text, (20, 20))
 
 
+def draw_spatial_grid(screen: pygame.Surface) -> None:
+    cell_size = int(config.SPATIAL_GRID_CELL_SIZE)
+
+    for x in range(0, config.SCREEN_WIDTH + 1, cell_size):
+        pygame.draw.line(
+            screen, 
+            config.SPATIAL_GRID_COLOR, 
+            (x, 0), 
+            (x, config.SCREEN_HEIGHT),
+        )
+
+    for y in range(0, config.SCREEN_HEIGHT + 1, cell_size):
+        pygame.draw.line(
+            screen, 
+            config.SPATIAL_GRID_COLOR, 
+            (0, y), 
+            (config.SCREEN_WIDTH, y),
+        )
+
 def draw_game(screen: pygame.Surface, game: Game, fps: float) -> None:
     screen.fill(config.BACKGROUND_COLOR)
+
+    if config.SHOW_SPATIAL_GRID:
+        draw_spatial_grid(screen)
 
     for agent in game.agents:
         if not agent.is_alive():
