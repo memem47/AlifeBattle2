@@ -32,12 +32,12 @@ class Agent:
         if movement.length_squared() > config.DISTANCE_EPSILON**2:
             self.facing_direction = movement.normalize()
 
-    def find_nearest_enemy(self, agents: list[Agent]) -> Agent | None:
+    def find_nearest_enemy(self, enemies: list[Agent]) -> Agent | None:
         nearest_enemy = None
         nearest_distance = inf
 
-        for enemy in agents:
-            if not enemy.is_alive() or enemy.team == self.team:
+        for enemy in enemies:
+            if not enemy.is_alive():
                 continue
 
             offset = self.position - enemy.position

@@ -132,7 +132,7 @@ Do not modify VISION, SPEC, or DESIGN merely to make them match accidental imple
 
 Version-specific rules belong in SPEC and DESIGN, not in this instruction file.
 
-Completion
+## Completion
 
 A change is complete when:
 

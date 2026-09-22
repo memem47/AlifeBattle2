@@ -23,11 +23,15 @@ def test_take_damage_and_death() -> None:
 def test_calculate_target_movement_uses_elapsed_time_and_stops_at_attack_range() -> None:
     agent = make_agent(1, config.RED, 0)
 
-    target_movement = agent.calculate_target_movement(pygame.Vector2(100, 0), 0.5)
+    target_movement = agent.calculate_target_movement(
+        pygame.Vector2(100, 0), 0.5
+    )
     assert target_movement.x == config.AGENT_SPEED * 0.5
 
-    target_movement = agent.calculate_target_movement(pygame.Vector2(100, 0), 3.0)
-    assert target_movement.x == config.AGENT_SPEED * 3.0
+    target_movement = agent.calculate_target_movement(
+        pygame.Vector2(100, 0), 4.0
+       )
+    assert target_movement.x == config.ATTACK_RANGE
 
 
 def test_attack_range_and_cooldown() -> None:
