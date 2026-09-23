@@ -31,3 +31,18 @@ def build_spatial_grid(
         grid[cell].append(agent)
 
     return grid
+
+def get_neighbor_candidates(
+        grid: SpatialGrid,
+        position: pygame.Vector2,
+) -> list[Agent]:
+    cell_x, cell_y = position_to_cell(position)
+
+    candidates: list[Agent] = []
+
+    for dx in (-1, 0, 1):
+        for dy in (-1, 0, 1):
+            cell = (cell_x + dx, cell_y + dy)
+            candidates.extend(grid.get(cell, []))
+
+    return candidates

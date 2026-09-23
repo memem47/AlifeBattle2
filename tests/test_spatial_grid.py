@@ -1,7 +1,7 @@
 import pygame
 
 import config
-from spatial_grid import build_spatial_grid, position_to_cell
+from spatial_grid import build_spatial_grid, get_neighbor_candidates, position_to_cell
 from agent import Agent
 
 def make_agent(
@@ -68,3 +68,40 @@ def test_build_spatial_grid_uses_position_snapshot() -> None:
 
     assert (1, 0) in grid
     assert grid[(1, 0)] == [agent]
+
+def test_get_neighbor_candidates_uses_current_and_adjacent_cells() -> None:
+    cell_size = config.SPATIAL_GRID_CELL_SIZE
+
+    center = make_agent(1, 1, 1)
+    right = make_agent(2, cell_size + 1, 1)
+    diagonal = make_agent(3, cell_size + 1, cell_size + 1)
+    far = make_agent(4, cell_size * 2 + 1, 1)
+
+    agents = [center, right, diagonal, far]
+
+    positions = {
+        agent.id: agent.position.copy()
+        for agent in agents
+    }
+
+    grid = build_spatial_grid(agents, positions)
+
+    candidates = get_neighbor_candidates(
+        grid,
+        positions[center.id],
+    )
+
+    candidate_ids = {agent.id for agent in candidates}
+
+    assert center.id in candidate_ids
+    assert right.id in candidate_ids
+    assert diagonal.id in candidate_ids
+    assert far.id not in candidate_ids
+
+def test_get_neighbor_candidates_returns_empty_list_for_empty_grid() -> None:
+    candidates = get_neighbor_candidates(
+        {},
+        pygame.Vector2(10, 10),
+    )
+    
+    assert candidates == []
