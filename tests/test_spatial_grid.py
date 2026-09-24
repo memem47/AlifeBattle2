@@ -105,3 +105,51 @@ def test_get_neighbor_candidates_returns_empty_list_for_empty_grid() -> None:
     )
     
     assert candidates == []
+
+def test_neighbor_candidates_preserve_separation_result() -> None:
+    cell_size = config.SPATIAL_GRID_CELL_SIZE
+
+    center =make_agent(1, cell_size, cell_size)
+
+    near_left = make_agent(
+        2,
+        cell_size - config.SEPARATION_DISTANCE / 2,
+        cell_size,
+    )
+    near_right = make_agent(
+        3,
+        cell_size + config.SEPARATION_DISTANCE / 2,
+        cell_size,
+    )
+
+    far = make_agent(
+        4,
+        cell_size * 4,
+        cell_size,
+    )
+
+    agents = [center, near_left, near_right, far]
+
+    positions = {
+        agent.id: agent.position.copy()
+        for agent in agents
+    }
+
+    grid = build_spatial_grid(agents, positions)
+
+    candidates = get_neighbor_candidates(
+        grid,
+        positions[center.id],
+    )
+
+    full_result = center.calculate_separation(
+        agents,
+        positions,
+    )
+
+    grid_result = center.calculate_separation(
+        candidates,
+        positions,
+    )
+
+    assert grid_result == full_result

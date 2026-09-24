@@ -6,6 +6,12 @@ import pygame
 
 import config
 from agent import Agent
+from spatial_grid import (
+    SpatialGrid,
+    build_spatial_grid,
+    get_neighbor_candidates,
+)
+import spatial_grid
 
 
 class Game:
@@ -72,18 +78,22 @@ class Game:
         self._select_targets(red_agents, blue_agents)
 
         positions = self._snapshot_positions(living_agents)
+
         target_positions = {
             agent.id: agent.target.position.copy()
             for agent in living_agents
             if agent.target is not None
         }
 
+        spatial_grid = build_spatial_grid(living_agents, positions)
         planned_positions = self._plan_movements(
             living_agents,
             positions,
             target_positions,
+            spatial_grid,
             dt,
         )
+
         self._apply_movements(living_agents, planned_positions)
 
         self._resolve_attacks(living_agents)
@@ -116,6 +126,7 @@ class Game:
         living_agents: list[Agent],
         positions: dict[int, pygame.Vector2],
         target_positions: dict[int, pygame.Vector2],
+        spatial_grid: SpatialGrid,
         dt: float,
     ) -> dict[int, pygame.Vector2]:
         planned_positions: dict[int, pygame.Vector2] = {}
@@ -135,7 +146,14 @@ class Game:
                     <= config.ATTACK_RANGE + config.DISTANCE_EPSILON
                 )
 
-            separation = agent.calculate_separation(living_agents, positions)
+            neighbor_candidates = get_neighbor_candidates(
+                spatial_grid,
+                start_position,
+            )
+            separation = agent.calculate_separation(
+                neighbor_candidates,
+                positions,
+            )
             planned_position += separation * dt
 
             if agent.id in target_positions:
