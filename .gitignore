@@ -219,3 +219,6 @@ __marimo__/
 
 # Temporary files
 temp/
+
+# Profiling output
+*.prof
