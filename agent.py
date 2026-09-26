@@ -36,12 +36,17 @@ class Agent:
         nearest_enemy = None
         nearest_distance = inf
 
+        x = self.position.x
+        y = self.position.y
+
         for enemy in enemies:
             if not enemy.is_alive():
                 continue
 
-            offset = self.position - enemy.position
-            distance_squared = offset.length_squared()
+            dx = x - enemy.position.x
+            dy = y - enemy.position.y
+            distance_squared = dx * dx + dy * dy
+            
             if distance_squared < nearest_distance:
                 nearest_enemy = enemy
                 nearest_distance = distance_squared
