@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from math import inf
-
 import pygame
 
 import config
@@ -31,27 +29,6 @@ class Agent:
     def update_facing_direction(self, movement: pygame.Vector2) -> None:
         if movement.length_squared() > config.DISTANCE_EPSILON**2:
             self.facing_direction = movement.normalize()
-
-    def find_nearest_enemy(self, enemies: list[Agent]) -> Agent | None:
-        nearest_enemy = None
-        nearest_distance = inf
-
-        x = self.position.x
-        y = self.position.y
-
-        for enemy in enemies:
-            if not enemy.is_alive():
-                continue
-
-            dx = x - enemy.position.x
-            dy = y - enemy.position.y
-            distance_squared = dx * dx + dy * dy
-            
-            if distance_squared < nearest_distance:
-                nearest_enemy = enemy
-                nearest_distance = distance_squared
-
-        return nearest_enemy
 
     def calculate_command_movement(
         self,

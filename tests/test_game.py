@@ -48,35 +48,6 @@ def test_reset_creates_two_teams_with_reproducible_random_positions(monkeypatch)
         position.x for position in blue_positions
     )
 
-
-def test_nearest_target_and_dead_target_exclusion() -> None:
-    game = Game()
-    red = make_agent(1, config.RED, 0)
-    nearest = make_agent(2, config.BLUE, 10)
-    farther = make_agent(3, config.BLUE, 20)
-    dead = make_agent(4, config.BLUE, 1, hp=0)
-    game.agents = [red, farther, dead, nearest]
-
-    game.update(0)
-
-    assert red.target is nearest
-
-
-def test_target_changes_to_nearest_enemy_each_update() -> None:
-    game = Game()
-
-    red = make_agent(1, config.RED, 0)
-    farther = make_agent(2, config.BLUE, 30)
-    nearer = make_agent(3, config.BLUE, 10)
-
-    red.target = farther
-    game.agents = [red, farther, nearer]
-
-    game.update(0)
-
-    assert red.target is nearer
-
-
 def test_update_stores_team_command_movement_direction() -> None:
     game = Game()
     red = make_agent(1, config.RED, 0)
@@ -240,3 +211,64 @@ def test_agents_attack_after_command_movement_enters_attack_range(
 
     assert red.hp == red_start_hp - config.ATTACK_DAMAGE
     assert blue.hp == blue_start_hp - config.ATTACK_DAMAGE
+
+def test_local_attack_target_selects_nearest_enemy_in_range() -> None:
+    game = Game()
+
+    red = make_agent(1, config.RED, 0)
+    nearest = make_agent(
+        2,
+        config.BLUE,
+        config.ATTACK_RANGE * 0.4,
+    )
+    farther = make_agent(
+        3,
+        config.BLUE,
+        config.ATTACK_RANGE * 0.8,
+    )
+
+    game.agents = [
+        red,
+        farther,
+        nearest,
+    ]
+
+    game.update(0)
+
+    assert red.target is nearest
+
+def test_enemy_outside_attack_range_is_not_targeted() -> None:
+    game = Game()
+
+    red = make_agent(1, config.RED, 0)
+    blue = make_agent(
+        2,
+        config.BLUE,
+        config.ATTACK_RANGE
+        + config.DISTANCE_EPSILON
+        + 1,
+    )
+
+    game.agents = [red, blue]
+
+    game.update(0)
+
+    assert red.target is None
+    assert blue.target is None
+
+def test_dead_enemy_is_not_local_attack_target() -> None:
+    game = Game()
+
+    red = make_agent(1, config.RED, 0)
+    dead_blue = make_agent(
+        2,
+        config.BLUE,
+        config.ATTACK_RANGE / 2,
+        hp=0,
+    )
+
+    game.agents = [red, dead_blue]
+
+    game.update(0)
+
+    assert red.target is None

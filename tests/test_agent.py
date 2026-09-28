@@ -76,16 +76,6 @@ def test_attack_range_allows_small_floating_point_error() -> None:
     assert attacker.is_in_attack_range(target)
 
 
-def test_find_nearest_living_enemy() -> None:
-    agent = make_agent(1, config.RED, 0)
-    nearest = make_agent(2, config.BLUE, 10)
-    farther = make_agent(3, config.BLUE, 20)
-    dead = make_agent(4, config.BLUE, 1)
-    dead.take_damage(config.AGENT_HP)
-
-    assert agent.find_nearest_enemy([farther, dead, nearest]) is nearest
-
-
 def test_calculate_separation_pushes_agent_away_from_neighbor() -> None:
     agent = make_agent(1, config.RED, 0)
     neighbor1 = make_agent(2, config.RED, 1)

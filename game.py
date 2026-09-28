@@ -77,21 +77,37 @@ class Game:
         living_agents = self.get_living_agents()
 
         self._update_cooldowns(living_agents, dt)
-        red_agents = self.get_living_agents(config.RED)
-        blue_agents = self.get_living_agents(config.BLUE)
-        self._select_targets(red_agents, blue_agents)
 
         positions = self._snapshot_positions(living_agents)
 
-        spatial_grid = build_spatial_grid(living_agents, positions)
+        movement_grid = build_spatial_grid(
+            living_agents, 
+            positions,
+        )
+
         planned_positions = self._plan_movements(
             living_agents,
             positions,
-            spatial_grid,
+            movement_grid,
             dt,
         )
 
-        self._apply_movements(living_agents, planned_positions)
+        self._apply_movements(
+            living_agents, 
+            planned_positions,
+        )
+
+        attack_positions = self._snapshot_positions(living_agents)
+
+        attack_grid = build_spatial_grid(
+            living_agents, 
+            attack_positions,
+        )
+
+        self._select_local_attack_targets(
+            living_agents,
+            attack_grid,
+        )
 
         self._resolve_attacks(living_agents)
 
@@ -107,12 +123,6 @@ class Game:
     def _update_cooldowns(self, living_agents: list[Agent], dt: float) -> None:
         for agent in living_agents:
             agent.update_cooldown(dt)
-
-    def _select_targets(self, red_agents: list[Agent], blue_agents: list[Agent]) -> None:
-        for agent in red_agents:
-            agent.target = agent.find_nearest_enemy(blue_agents)
-        for agent in blue_agents:
-            agent.target = agent.find_nearest_enemy(red_agents)
 
     def _snapshot_positions(self, living_agents: list[Agent]) -> dict[int, pygame.Vector2]:
         positions = {agent.id: agent.position.copy() for agent in living_agents}
@@ -189,3 +199,43 @@ class Game:
             self.winner = config.BLUE
         else:
             self.winner = config.DRAW
+
+    def _select_local_attack_targets(
+        self,
+        living_agents: list[Agent],
+        spatial_grid: SpatialGrid,
+    ) -> None:
+        attack_range_squared = (
+            config.ATTACK_RANGE + config.DISTANCE_EPSILON
+        ) ** 2
+
+        for agent in living_agents:
+            agent.target = None
+
+            candidates = get_neighbor_candidates(
+                spatial_grid,
+                agent.position,
+            )
+
+            nearest_enemy = None
+            nearest_distance_squared = float("inf")
+
+            for candidate in candidates:
+                if candidate is agent:
+                    continue
+
+                if candidate.team == agent.team:
+                    continue
+
+                dx = agent.position.x - candidate.position.x
+                dy = agent.position.y - candidate.position.y
+                distance_squared = dx * dx + dy * dy
+
+                if distance_squared > attack_range_squared:
+                    continue
+
+                if distance_squared < nearest_distance_squared:
+                    nearest_enemy = candidate
+                    nearest_distance_squared = distance_squared
+
+            agent.target = nearest_enemy
