@@ -48,3 +48,30 @@ Initially:
 
 More complex commands should be introduced only after this basic model works.
 
+## v0.3 - Command-Driven Movement
+
+Status: Complete
+
+- Separate movement from attack targeting.
+- Replace global nearest-enemy movement with fixed team advance directions.
+- Use spatial-grid local search for attack targeting
+- Preserve local separation and combat behavior.
+
+## v0.4 - Basic Player Commands
+
+Planned commands:
+
+- `ADVANCE`
+- `HOLD`
+
+Initial goal:
+
+Allow the player to switch a team's movement command during the simulation.
+
+v0.4 should not yet introduce:
+
+- retreat,
+- formations,
+- multiple units,
+- commander AI,
+- command queues.
