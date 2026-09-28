@@ -49,33 +49,6 @@ def test_reset_creates_two_teams_with_reproducible_random_positions(monkeypatch)
     )
 
 
-def test_deeded_battle_completes_after_agents_reach_attack_range(
-        monkeypatch,
-) -> None:
-    monkeypatch.setattr(config, "RANDOM_SEED", 0)
-    game = Game()
-
-    for _ in range(1800):
-        game.update(1 / 60)
-        if game.battle_finished:
-            break
-
-    assert game.battle_finished
-    assert game.winner in (config.RED, config.BLUE, config.DRAW)
-
-
-def test_default_seed_does_not_stall_at_attack_range(monkeypatch) -> None:
-    monkeypatch.setattr(config, "RANDOM_SEED", 1)
-    game = Game()
-
-    for _ in range(6000):
-        game.update(1 / 60)
-        if game.battle_finished:
-            break
-
-    assert game.battle_finished
-
-
 def test_nearest_target_and_dead_target_exclusion() -> None:
     game = Game()
     red = make_agent(1, config.RED, 0)
@@ -104,7 +77,7 @@ def test_target_changes_to_nearest_enemy_each_update() -> None:
     assert red.target is nearer
 
 
-def test_update_stores_final_movement_direction() -> None:
+def test_update_stores_team_command_movement_direction() -> None:
     game = Game()
     red = make_agent(1, config.RED, 0)
     blue = make_agent(2, config.BLUE, 100)
@@ -129,19 +102,32 @@ def test_dead_agent_keeps_position_and_is_excluded_from_update() -> None:
     assert red.target is None
 
 
-def test_agents_keep_separation_inside_attack_range_without_oscillation() -> None:
+def test_agents_continue_team_command_movement_inside_attack_range(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        config,
+        "MAX_SEPARATION_SPEED",
+        0.0,
+    )
+
     game = Game()
+
     red = make_agent(1, config.RED, 0)
-    blue = make_agent(2, config.BLUE, config.ATTACK_RANGE)
+    blue = make_agent(
+        2,
+        config.BLUE,
+        config.ATTACK_RANGE,
+    )
     game.agents = [red, blue]
 
-    game.update(1 / 60)
-    first_positions = [agent.position.copy() for agent in game.agents]
+    red_start_x = red.position.x
+    blue_start_x = blue.position.x
+
     game.update(1 / 60)
 
-    assert [agent.position for agent in game.agents] == first_positions
-    assert red.position.distance_to(blue.position) >= config.ATTACK_RANGE
-
+    assert red.position.x > red_start_x
+    assert blue.position.x < blue_start_x
 
 def test_separation_does_not_change_direction_at_long_range() -> None:
     game = Game()
@@ -191,3 +177,66 @@ def test_simultaneous_attacks_kill_both_agents() -> None:
     assert not red.is_alive()
     assert not blue.is_alive()
     assert game.winner == config.DRAW
+
+
+def test_agents_move_by_team_command_not_toward_enemy() -> None:
+    game = Game()
+
+    red = Agent(
+        0,
+        config.RED,
+        pygame.Vector2(300, 200),
+    )
+    blue = Agent(
+        1,
+        config.BLUE,
+        pygame.Vector2(100, 200),
+    )
+
+    game.agents = [red, blue]
+
+    red_start_x = red.position.x
+    blue_start_x = blue.position.x
+
+    game.update(0.1)
+
+    assert red.position.x > red_start_x
+    assert blue.position.x < blue_start_x
+
+def test_agents_attack_after_command_movement_enters_attack_range(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        config,
+        "MAX_SEPARATION_SPEED",
+        0.0,
+    )
+
+    game = Game()
+
+    dt = min(1 / 60, config.MAX_DT)
+
+    start_distance = (
+        config.ATTACK_RANGE
+        + config.AGENT_SPEED * dt
+    )
+
+    red = make_agent(
+        1,
+        config.RED,
+        0,
+    )
+    blue = make_agent(
+        2,
+        config.BLUE,
+        start_distance,
+    )
+    game.agents = [red, blue]
+
+    red_start_hp = red.hp
+    blue_start_hp = blue.hp
+
+    game.update(dt)
+
+    assert red.hp == red_start_hp - config.ATTACK_DAMAGE
+    assert blue.hp == blue_start_hp - config.ATTACK_DAMAGE

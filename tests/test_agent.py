@@ -20,18 +20,36 @@ def test_take_damage_and_death() -> None:
     assert not agent.is_alive()
 
 
-def test_calculate_target_movement_uses_elapsed_time_and_stops_at_attack_range() -> None:
+def test_calculate_command_movement_uses_elapsed_time_and_normalized_direction() -> None:
     agent = make_agent(1, config.RED, 0)
 
-    target_movement = agent.calculate_target_movement(
-        pygame.Vector2(100, 0), 0.5
+    movement = agent.calculate_command_movement(
+        pygame.Vector2(1, 0), 
+        0.5,
     )
-    assert target_movement.x == config.AGENT_SPEED * 0.5
+    assert movement == pygame.Vector2(
+        config.AGENT_SPEED * 0.5,
+        0,
+    )
 
-    target_movement = agent.calculate_target_movement(
-        pygame.Vector2(100, 0), 4.0
-       )
-    assert target_movement.x == 100 - config.ATTACK_RANGE
+    movement = agent.calculate_command_movement(
+        pygame.Vector2(10, 0), 
+        0.5,
+    )
+    assert movement == pygame.Vector2(
+        config.AGENT_SPEED * 0.5,
+        0,
+    )
+
+def test_calculate_command_movement_returns_zero_for_zero_direction() -> None:
+    agent = make_agent(1, config.RED, 0)
+
+    movement = agent.calculate_command_movement(
+        pygame.Vector2(),
+        0.5,
+    )
+
+    assert movement == pygame.Vector2()
 
 
 def test_attack_range_and_cooldown() -> None:

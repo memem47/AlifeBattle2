@@ -11,10 +11,14 @@ from spatial_grid import (
     build_spatial_grid,
     get_neighbor_candidates,
 )
-import spatial_grid
-
 
 class Game:
+
+    TEAM_MOVE_DIRECTIONS = {
+        config.RED: pygame.Vector2(1, 0),
+        config.BLUE: pygame.Vector2(-1, 0),
+    }
+
     def __init__(self) -> None:
         self.agents: list[Agent] = []
         self.winner: str | None = None
@@ -79,17 +83,10 @@ class Game:
 
         positions = self._snapshot_positions(living_agents)
 
-        target_positions = {
-            agent.id: agent.target.position.copy()
-            for agent in living_agents
-            if agent.target is not None
-        }
-
         spatial_grid = build_spatial_grid(living_agents, positions)
         planned_positions = self._plan_movements(
             living_agents,
             positions,
-            target_positions,
             spatial_grid,
             dt,
         )
@@ -125,26 +122,19 @@ class Game:
         self,
         living_agents: list[Agent],
         positions: dict[int, pygame.Vector2],
-        target_positions: dict[int, pygame.Vector2],
         spatial_grid: SpatialGrid,
         dt: float,
     ) -> dict[int, pygame.Vector2]:
         planned_positions: dict[int, pygame.Vector2] = {}
+
         for agent in living_agents:
             start_position = positions[agent.id]
-            planned_position = start_position.copy()
-            reaches_attack_range = False
-
-            if agent.id in target_positions:
-                target_position = target_positions[agent.id]                
-                target_movement = agent.calculate_target_movement(
-                    target_position, dt, start_position
-                )
-                planned_position += target_movement
-                reaches_attack_range = (
-                    planned_position.distance_to(target_position)
-                    <= config.ATTACK_RANGE + config.DISTANCE_EPSILON
-                )
+            
+            command_direction = self.TEAM_MOVE_DIRECTIONS[agent.team]
+            command_movement = agent.calculate_command_movement(
+                command_direction,
+                dt,
+            )
 
             neighbor_candidates = get_neighbor_candidates(
                 spatial_grid,
@@ -154,22 +144,15 @@ class Game:
                 neighbor_candidates,
                 positions,
             )
-            planned_position += separation * dt
-
-            if agent.id in target_positions:
-                target_position = target_positions[agent.id]
-                base_target_distance = start_position.distance_to(target_position)
-                target_distance = planned_position.distance_to(target_position)
-                if (
-                    (base_target_distance <= config.ATTACK_RANGE or reaches_attack_range)
-                    and target_distance > config.ATTACK_RANGE
-                ):
-                    direction = planned_position - target_position
-                    planned_position = target_position + direction.normalize() * (
-                        config.ATTACK_RANGE - config.DISTANCE_EPSILON
-                    )
+            
+            planned_position = (
+                start_position
+                + command_movement
+                + separation * dt
+            )
 
             planned_positions[agent.id] = planned_position
+
         return planned_positions
 
     def _apply_movements(

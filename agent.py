@@ -53,33 +53,15 @@ class Agent:
 
         return nearest_enemy
 
-    def calculate_target_movement(
+    def calculate_command_movement(
         self,
-        target_position: pygame.Vector2,
+        direction: pygame.Vector2,
         dt: float,
-        start_position: pygame.Vector2 | None = None,
     ) -> pygame.Vector2:
-        position = (
-            self.position 
-            if start_position is None 
-            else pygame.Vector2(start_position)
-        )
-
-        direction = pygame.Vector2(target_position) - position
-        distance = direction.length()
-
-        if distance <= config.ATTACK_RANGE:
+        if direction.length_squared() == 0:
             return pygame.Vector2()
-        
-        movement_distance = min(
-            config.AGENT_SPEED * dt, 
-            distance - config.ATTACK_RANGE,
-        )
 
-        if movement_distance <= 0:
-            return pygame.Vector2()
-        
-        return direction.normalize() * movement_distance
+        return direction.normalize() * config.AGENT_SPEED * dt
 
     def calculate_separation(
         self,
