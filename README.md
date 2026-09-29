@@ -34,3 +34,5 @@ Project goals and design decisions are documented separately:
 - [v0.3 Specification](docs/specs/v0.3.md)
 - [v0.3 Design](docs/designs/v0.3.md)
 - [v0.3 Retrospective](docs/retrospectives/v0.3.md)
+- [v0.4 Specification](docs/specs/v0.4.md)
+- [v0.4 Design](docs/designs/v0.4.md)
