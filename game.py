@@ -14,7 +14,10 @@ from spatial_grid import (
 
 class Game:
 
-    TEAM_MOVE_DIRECTIONS = {
+    COMMAND_ADVANCE = "ADVANCE"
+    COMMAND_HOLD = "HOLD"
+
+    TEAM_ADVANCE_DIRECTIONS = {
         config.RED: pygame.Vector2(1, 0),
         config.BLUE: pygame.Vector2(-1, 0),
     }
@@ -23,12 +26,19 @@ class Game:
         self.agents: list[Agent] = []
         self.winner: str | None = None
         self.battle_finished = False
+        self.team_commands: dict[str, str] = {}
         self.reset()
 
     def reset(self) -> None:
         self.agents = []
         self.winner = None
         self.battle_finished = False
+
+        self.team_commands = {
+            config.RED: self.COMMAND_ADVANCE,
+            config.BLUE: self.COMMAND_ADVANCE,
+        }
+
         random_generator = random.Random(config.RANDOM_SEED)
 
         for team, start_x in (
@@ -140,7 +150,9 @@ class Game:
         for agent in living_agents:
             start_position = positions[agent.id]
             
-            command_direction = self.TEAM_MOVE_DIRECTIONS[agent.team]
+            command_direction = self._get_team_move_direction(
+                agent.team,
+            )
             command_movement = agent.calculate_command_movement(
                 command_direction,
                 dt,
@@ -164,6 +176,15 @@ class Game:
             planned_positions[agent.id] = planned_position
 
         return planned_positions
+
+    def _get_team_move_direction(
+            self,
+            team: str,
+    ) -> pygame.Vector2:
+        if self.team_commands[team] == self.COMMAND_HOLD:
+            return pygame.Vector2()
+
+        return self.TEAM_ADVANCE_DIRECTIONS[team]
 
     def _apply_movements(
         self,
@@ -239,3 +260,9 @@ class Game:
                     nearest_distance_squared = distance_squared
 
             agent.target = nearest_enemy
+
+    def toggle_team_command(self, team: str) -> None:
+        if self.team_commands[team] == self.COMMAND_ADVANCE:
+            self.team_commands[team] = self.COMMAND_HOLD
+        else:
+            self.team_commands[team] = self.COMMAND_ADVANCE

@@ -272,3 +272,124 @@ def test_dead_enemy_is_not_local_attack_target() -> None:
     game.update(0)
 
     assert red.target is None
+
+def test_teams_start_with_advance_command() -> None:
+    game = Game()
+
+    assert (
+        game.team_commands[config.RED]
+        == Game.COMMAND_ADVANCE
+    )
+    assert (
+        game.team_commands[config.BLUE]
+        == Game.COMMAND_ADVANCE
+    )
+
+def test_toggle_team_command_changes_only_selected_team() -> None:
+    game = Game()
+
+    game.toggle_team_command(config.RED)
+
+    assert (
+        game.team_commands[config.RED]
+        == Game.COMMAND_HOLD
+    )
+    assert (
+        game.team_commands[config.BLUE]
+        == Game.COMMAND_ADVANCE
+    )
+
+    game.toggle_team_command(config.RED)
+
+    assert (
+        game.team_commands[config.RED]
+        == Game.COMMAND_ADVANCE
+    )
+
+def test_reset_restores_team_commands_to_advance() -> None:
+    game = Game()
+
+    game.toggle_team_command(config.RED)
+    game.toggle_team_command(config.BLUE)
+
+    assert (
+        game.team_commands[config.RED]
+        == Game.COMMAND_HOLD
+    )
+    assert (
+        game.team_commands[config.BLUE]
+        == Game.COMMAND_HOLD
+    )
+
+    game.reset()
+
+    assert (
+        game.team_commands[config.RED]
+        == Game.COMMAND_ADVANCE
+    )
+    assert (
+        game.team_commands[config.BLUE]
+        == Game.COMMAND_ADVANCE
+    )
+
+def test_hold_stops_commanded_forward_movement() -> None:
+    game = Game()
+
+    red = make_agent(
+        1,
+        config.RED,
+        100,
+    )
+    blue = make_agent(
+        2,
+        config.BLUE,
+        500,
+    )
+
+    game.agents = [red, blue]
+
+    game.toggle_team_command(config.RED)
+
+    red_start_position = red.position.copy()
+    blue_start_x = blue.position.x
+
+    game.update(0.1)
+
+    assert red.position == red_start_position
+    assert blue.position.x < blue_start_x
+
+def test_hold_preserves_separation_movement() -> None:
+    game = Game()
+
+    red1 = Agent(
+        1,
+        config.RED,
+        pygame.Vector2(100, 100),
+    )
+    red2 = Agent(
+        2,
+        config.RED,
+        pygame.Vector2(
+            100 + config.SEPARATION_DISTANCE / 2,
+            100,
+        ),
+    )
+    blue = Agent(
+        3,
+        config.BLUE,
+        pygame.Vector2(500, 100),
+    )
+
+    game.agents = [red1, red2, blue]
+
+    game.toggle_team_command(config.RED)
+
+    red1_start = red1.position.copy()
+    red2_start = red2.position.copy()
+
+    game.update(0.1)
+
+    assert (
+        red1.position != red1_start
+        or red2.position != red2_start
+    )
