@@ -22,6 +22,10 @@ def main() -> None:
                     running = False
                 elif event.key == pygame.K_r:
                     game.reset()
+                elif event.key == pygame.K_a:
+                    game.toggle_team_command(config.RED)
+                elif event.key == pygame.K_b:
+                    game.toggle_team_command(config.BLUE)
 
         dt = min(clock.tick(config.TARGET_FPS) / 1000.0, config.MAX_DT)
         game.update(dt)
