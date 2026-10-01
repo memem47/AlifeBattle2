@@ -53,19 +53,53 @@ def draw_agent(screen: pygame.Surface, agent: Agent) -> None:
     pygame.draw.circle(screen, color, center, config.DEATH_MARKER_RADIUS)
 
 
-def draw_hud(screen: pygame.Surface, game: Game, fps: float) -> None:
+def draw_hud(
+    screen: pygame.Surface,
+    game: Game,
+    fps: float,
+) -> None:
     font = pygame.font.Font(None, 30)
+
     red_count = len(game.get_living_agents(config.RED))
     blue_count = len(game.get_living_agents(config.BLUE))
-    status = f"Red: {red_count}    Blue: {blue_count}    FPS: {fps:.1f}"
 
     if game.battle_finished:
-        status = f"{game.winner.upper()} WINS" if game.winner != config.DRAW else "DRAW"
+        status = (
+            f"{game.winner.upper()} WINS"
+            if game.winner != config.DRAW
+            else "DRAW"
+        )
         status += f"    FPS: {fps:.1f}    Press R to restart"
+    else:
+        status = (
+            f"Red: {red_count}    "
+            f"Blue: {blue_count}    "
+            f"FPS: {fps:.1f}"
+        )
 
-    text = font.render(status, True, config.TEXT_COLOR)
-    screen.blit(text, (20, 20))
+    red_command = (
+        f"Red Command: {game.team_commands[config.RED]} [A]"
+    )
+    blue_command = (
+        f"Blue Command: {game.team_commands[config.BLUE]} [B]"
+    )
 
+    lines = [
+        status,
+        red_command,
+        blue_command,
+    ]
+
+    for index, line in enumerate(lines):
+        text = font.render(
+            line,
+            True,
+            config.TEXT_COLOR,
+        )
+        screen.blit(
+            text,
+            (20, 20 + index * 28),
+        )
 
 def draw_spatial_grid(screen: pygame.Surface) -> None:
     cell_size = int(config.SPATIAL_GRID_CELL_SIZE)
