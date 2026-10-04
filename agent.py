@@ -11,6 +11,7 @@ class Agent:
         agent_id: int,
         team: str,
         position: pygame.Vector2,
+        size_scale: float = config.DEFAULT_AGENT_SIZE_SCALE,
     ) -> None:
         self.id = agent_id
         self.team = team
@@ -19,6 +20,22 @@ class Agent:
         self.hp = config.AGENT_HP
         self.attack_cooldown = 0.0
         self.target: Agent | None = None
+        self.size_scale = size_scale
+
+    @property
+    def visual_radius(self) -> float:
+        return (
+            config.DEFAULT_AGENT_VISUAL_RADIUS
+            * self.size_scale
+        )
+
+
+    @property
+    def physical_radius(self) -> float:
+        return (
+            config.DEFAULT_AGENT_PHYSICAL_RADIUS
+            * self.size_scale
+        )
 
     def is_alive(self) -> bool:
         return self.hp > 0

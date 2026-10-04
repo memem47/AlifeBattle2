@@ -31,10 +31,14 @@ def get_triangle_points(agent: Agent) -> list[tuple[int, int]]:
     direction = agent.facing_direction.normalize()
     side = pygame.Vector2(-direction.y, direction.x)
     center = agent.position
+    scale = agent.size_scale
+
     points = (
-        center + direction * config.TRIANGLE_FRONT,
-        center - direction * config.TRIANGLE_REAR + side * config.TRIANGLE_HALF_WIDTH,
-        center - direction * config.TRIANGLE_REAR - side * config.TRIANGLE_HALF_WIDTH,
+        center + direction * config.TRIANGLE_FRONT * scale,
+        center - direction * config.TRIANGLE_REAR * scale
+          + side * config.TRIANGLE_HALF_WIDTH * scale,
+        center - direction * config.TRIANGLE_REAR * scale
+          - side * config.TRIANGLE_HALF_WIDTH * scale,
     )
     return [(round(point.x), round(point.y)) for point in points]
 
@@ -50,7 +54,13 @@ def draw_agent(screen: pygame.Surface, agent: Agent) -> None:
         if agent.team == config.RED
         else config.BLUE_DEATH_MARKER_COLOR
     )
-    pygame.draw.circle(screen, color, center, config.DEATH_MARKER_RADIUS)
+
+    death_marker_radius = max(
+        1, round(config.DEATH_MARKER_RADIUS * agent.size_scale)
+    )
+    pygame.draw.circle(
+        screen, color, center, death_marker_radius
+    )
 
 
 def draw_hud(

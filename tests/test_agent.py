@@ -1,4 +1,5 @@
 import pygame
+import pytest
 
 import config
 from agent import Agent
@@ -98,3 +99,40 @@ def test_facing_direction_updates_only_for_non_zero_movement() -> None:
 
     agent.update_facing_direction(pygame.Vector2())
     assert agent.facing_direction == pygame.Vector2(0, 1)
+
+def test_agent_size_scale_controls_visual_and_physical_radius() -> None:
+    normal = Agent(
+        1,
+        config.RED,
+        pygame.Vector2(),
+    )
+
+    large = Agent(
+        2,
+        config.RED,
+        pygame.Vector2(),
+        size_scale=1.5,
+    )
+
+    assert normal.visual_radius == pytest.approx(
+        config.DEFAULT_AGENT_VISUAL_RADIUS
+    )
+    assert normal.physical_radius == pytest.approx(
+        config.DEFAULT_AGENT_PHYSICAL_RADIUS
+    )
+
+    assert large.visual_radius == pytest.approx(
+        normal.visual_radius * 1.5
+    )
+    assert large.physical_radius == pytest.approx(
+        normal.physical_radius * 1.5
+    )
+
+def test_physical_radius_is_smaller_than_visual_radius() -> None:
+    agent = Agent(
+        1,
+        config.RED,
+        pygame.Vector2(),
+    )
+
+    assert agent.physical_radius < agent.visual_radius

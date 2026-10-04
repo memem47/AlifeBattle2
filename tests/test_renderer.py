@@ -54,3 +54,17 @@ def test_living_agent_is_drawn_over_dead_agent_at_same_position() -> None:
 
     assert screen.get_at((50, 50))[:3] == config.BLUE_HEALTHY_COLOR
     pygame.quit()
+
+def test_triangle_points_scale_with_agent_size() -> None:
+    agent = Agent(
+        1,
+        config.RED,
+        pygame.Vector2(50, 50),
+        size_scale=1.5,
+    )
+
+    agent.facing_direction = pygame.Vector2(0, 1)
+
+    points = get_triangle_points(agent)
+
+    assert points[0] == (50, 68)
